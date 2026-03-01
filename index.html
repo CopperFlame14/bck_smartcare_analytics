@@ -133,6 +133,13 @@
                     <span>Alerts</span>
                     <span class="nav-badge alert-badge" id="alertBadgeCount">0</span>
                 </a>
+                <a href="#" class="nav-item" data-target="insights" id="nav-insights">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 4l-5 5-4-4-5 5" />
+                    </svg>
+                    <span>Deep Insights</span>
+                    <span class="nav-badge" style="background:rgba(16,185,129,0.15);color:#10b981">NEW</span>
+                </a>
                 <p class="sidebar-section-label">Data</p>
                 <a href="#" class="nav-item" data-target="input" id="nav-input">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -473,6 +480,65 @@
                                 <li class="entry-placeholder">No entries yet</li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== DEEP INSIGHTS SECTION ===== -->
+            <section id="section-insights" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Deep Insights</h1>
+                        <p class="page-subtitle">Statistical intelligence — Heatmaps, anomaly detection &amp;
+                            comparative analytics</p>
+                    </div>
+                    <div class="ai-badge"
+                        style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.2);color:#10b981">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                            height="16">
+                            <path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 4l-5 5-4-4-5 5" />
+                        </svg>
+                        Advanced Analytics
+                    </div>
+                </div>
+
+                <!-- Feature 1: Heatmap -->
+                <div class="chart-card" style="margin-bottom:1.5rem">
+                    <div class="chart-header">
+                        <div>
+                            <h3>🔥 Staff Utilization Heatmap</h3>
+                            <p class="chart-sub">Patient load by department &times; day of week — reveals peak pressure
+                                windows</p>
+                        </div>
+                    </div>
+                    <div style="padding:1.25rem">
+                        <div id="heatmapGrid">
+                            <p class="empty-state">Generate sample data to see the heatmap</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Anomaly Detection -->
+                <div class="chart-card" style="margin-bottom:1.5rem">
+                    <div class="chart-header">
+                        <div>
+                            <h3>⚠️ Anomaly Detection — Wait Time Spikes</h3>
+                            <p class="chart-sub">Statistical outliers (z-score &gt; 1.8&sigma;) are flagged in red
+                                &mdash; <span id="anomalyCount" style="color:var(--red);font-weight:600"></span></p>
+                        </div>
+                    </div>
+                    <div style="height:320px;padding:1.25rem;position:relative">
+                        <canvas id="anomalyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Comparison Table -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>📊 Department Performance Comparison</h3>
+                    </div>
+                    <div style="padding:0 1.25rem 1.25rem" id="comparisonTable">
+                        <p class="empty-state">Generate sample data to see the comparison</p>
                     </div>
                 </div>
             </section>

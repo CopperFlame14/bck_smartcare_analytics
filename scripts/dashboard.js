@@ -2,6 +2,7 @@
 import { db } from './firebase-config.js';
 import { checkAlerts } from './alerts.js';
 import { updatePredictionSection } from './predict.js';
+import { updateInsights } from './insights.js';
 
 // Chart instances
 let chartPatients = null, chartWaitTime = null, chartDeptLoad = null;
@@ -51,6 +52,7 @@ export function initDashboard() {
         const currentFilter = filterDept ? filterDept.value : 'All';
         render(records, currentFilter);
         updatePredictionSection(records);
+        updateInsights(records);
     }, err => console.error('Dashboard listener error:', err));
 
     // Filter change
