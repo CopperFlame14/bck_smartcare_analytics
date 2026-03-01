@@ -1,32 +1,80 @@
-// alerts.js
-let alertTimeouts = {};
+// alerts.js — Smart Alert System with toast + alert log
+let activeAlerts = new Set();
 
 export function checkAlerts(metrics) {
-    const container = document.getElementById('alertContainer');
-    const alertThresholds = {
-        waitTime: 45, // Alert if average wait time > 45 mins
-        bedAvail: 10,  // Alert if bed availability < 10
-        score: 60     // Alert if efficiency score < 60
-    };
+    const waitThresh = parseInt(document.getElementById('threshWait')?.value || 45);
+    const bedThresh = parseInt(document.getElementById('threshBed')?.value || 10);
+    const scoreThresh = parseInt(document.getElementById('threshScore')?.value || 60);
 
-    const createAlert = (id, message) => {
-        if (document.getElementById(`alert-${id}`)) return; // already showing
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert glass';
-        alertDiv.id = `alert-${id}`;
-        alertDiv.textContent = `⚠️ Alert: ${message}`;
-        container.appendChild(alertDiv);
+    if (metrics.avgWait > waitThresh) {
+        triggerAlert('wait', 'danger', `🚨 High Wait Time: Average wait is ${metrics.avgWait} mins (threshold: ${waitThresh} min)`);
+    } else { clearAlert('wait'); }
 
-        // Auto remove after 5 seconds
-        alertTimeouts[id] = setTimeout(() => {
-            if (container.contains(alertDiv)) {
-                container.removeChild(alertDiv);
-            }
-            delete alertTimeouts[id];
-        }, 5000);
-    };
+    if (metrics.beds < bedThresh) {
+        triggerAlert('beds', 'danger', `🏥 Critical Bed Shortage: Only ${metrics.beds} beds available (threshold: ${bedThresh})`);
+    } else { clearAlert('beds'); }
 
-    if (metrics.avgWait > alertThresholds.waitTime) createAlert('wait', `Average waiting time is extremely high! (${metrics.avgWait} mins)`);
-    if (metrics.beds < alertThresholds.bedAvail) createAlert('beds', `Low bed availability! Only ${metrics.beds} beds left.`);
-    if (metrics.score !== undefined && metrics.score < alertThresholds.score) createAlert('score', `Hospital efficiency score dropped below safe levels! (${metrics.score})`);
+    if (metrics.score < scoreThresh) {
+        triggerAlert('score', 'warning', `⚠️ Low Efficiency Score: ${metrics.score}/100 — intervention recommended`);
+    } else { clearAlert('score'); }
+
+    // Update alert badge
+    const count = activeAlerts.size;
+    const badge = document.getElementById('alertBadgeCount');
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count === 0 ? 'none' : '';
+    }
+}
+
+function triggerAlert(id, type, message) {
+    if (activeAlerts.has(id)) return;
+    activeAlerts.add(id);
+
+    // Toast notification
+    showToast(message, type);
+
+    // Alert log entry
+    const log = document.getElementById('alertLog');
+    if (log) {
+        // Remove placeholder
+        const empty = log.querySelector('.empty-state');
+        if (empty) empty.remove();
+
+        const entry = document.createElement('div');
+        entry.className = `alert-entry ${type}`;
+        entry.id = `alert-entry-${id}`;
+        entry.innerHTML = `
+            <div class="alert-dot ${type}"></div>
+            <div>
+                <p class="alert-entry-text">${message}</p>
+                <p class="alert-time">${new Date().toLocaleTimeString()}</p>
+            </div>
+        `;
+        log.prepend(entry);
+    }
+}
+
+function clearAlert(id) {
+    if (!activeAlerts.has(id)) return;
+    activeAlerts.delete(id);
+    const entry = document.getElementById(`alert-entry-${id}`);
+    if (entry) entry.remove();
+}
+
+function showToast(message, type = 'error') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="toast-msg">${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(110%)';
+        toast.style.transition = 'all 0.4s ease';
+        setTimeout(() => toast.remove(), 400);
+    }, 5000);
 }

@@ -1,39 +1,63 @@
-// mockData.js
+// mockData.js — Generate 7 days of realistic hospital mock data
 import { db } from './firebase-config.js';
 
+const DEPARTMENTS = ['Emergency', 'Cardiology', 'Neurology', 'Orthopedics'];
+const SEVERITIES = ['low', 'low', 'low', 'medium', 'medium', 'high']; // weighted
+
 export async function generateMockData() {
-    const departments = ['Emergency', 'Cardiology', 'Neurology', 'Orthopedics'];
-    const batch = db.batch();
-
-    // Generate data for the last 7 days
-    for (let day = 0; day < 7; day++) {
-        const date = new Date();
-        date.setDate(date.getDate() - day);
-
-        // Random number of patients per day (5 to 15)
-        const dailyPatients = Math.floor(Math.random() * 10) + 5;
-
-        for (let i = 0; i < dailyPatients; i++) {
-            const dept = departments[Math.floor(Math.random() * departments.length)];
-            const arrival = new Date(date);
-            arrival.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
-
-            const docRef = db.collection('hospitalData').doc();
-            batch.set(docRef, {
-                department: dept,
-                arrival: arrival,
-                processTime: Math.floor(Math.random() * 60) + 10, // 10-70 mins
-                needsBed: Math.random() > 0.7,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-    }
+    const btn = document.getElementById('generateMockBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
 
     try {
+        const batch = db.batch();
+        let count = 0;
+
+        for (let dayOffset = 6; dayOffset >= 0; dayOffset--) {
+            const date = new Date();
+            date.setDate(date.getDate() - dayOffset);
+            date.setHours(0, 0, 0, 0);
+
+            // Weekends get slightly more emergency cases
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            const dailyCount = Math.floor(Math.random() * 8) + (isWeekend ? 10 : 6);
+
+            for (let i = 0; i < dailyCount; i++) {
+                const dept = DEPARTMENTS[Math.floor(Math.random() * DEPARTMENTS.length)];
+                const severity = SEVERITIES[Math.floor(Math.random() * SEVERITIES.length)];
+                const waitMultiplier = severity === 'high' ? 1.8 : severity === 'medium' ? 1.2 : 1;
+                const processTime = Math.round((Math.random() * 40 + 10) * waitMultiplier);
+
+                const arrival = new Date(date);
+                arrival.setHours(Math.floor(Math.random() * 22) + 1, Math.floor(Math.random() * 60));
+
+                const ref = db.collection('hospitalData').doc();
+                batch.set(ref, {
+                    department: dept,
+                    arrival,
+                    processTime,
+                    needsBed: severity === 'high' || (severity === 'medium' && Math.random() > 0.5),
+                    severity,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                count++;
+            }
+        }
         await batch.commit();
-        console.log("Mock data generated successfully!");
-        alert("7 days of mock data generated for visualization!");
+        console.log(`✅ Mock data: ${count} records generated`);
+        showSuccess(`✅ Generated ${count} patient records across 7 days!`);
     } catch (err) {
-        console.error("Error generating mock data: ", err);
+        console.error('Mock data error:', err);
+        showError('Error generating data: ' + err.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Generate 7-Day Mock Data'; }
     }
+}
+
+function showSuccess(msg) {
+    const el = document.getElementById('submitMsg');
+    if (el) { el.textContent = msg; el.style.color = '#10b981'; }
+}
+function showError(msg) {
+    const el = document.getElementById('submitMsg');
+    if (el) { el.textContent = msg; el.style.color = '#ef4444'; }
 }

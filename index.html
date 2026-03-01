@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI‑Powered Hospital Administrative Analytics Dashboard</title>
-    <!-- Google Fonts -->
+    <title>SmartCare Analytics | AI-Powered Hospital Dashboard</title>
+    <meta name="description"
+        content="AI-Powered Hospital Administrative Analytics Dashboard for real-time insights, predictive analytics, and smart alerts." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-
     <link rel="stylesheet" href="styles/main.css" />
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -22,133 +21,464 @@
 </head>
 
 <body>
-    <!-- Login Overlay -->
-    <div id="loginOverlay" class="login-overlay active">
-        <div class="login-box glass">
-            <h2>Admin Login</h2>
-            <form id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Admin Email" required />
-                <input type="password" id="loginPassword" placeholder="Password" required />
-                <button type="submit">Log In</button>
-                <p id="loginError" class="error-msg"></p>
+
+    <!-- ===================== AUTH OVERLAY ===================== -->
+    <div id="authOverlay" class="auth-overlay active">
+        <div class="auth-container">
+            <!-- Branding -->
+            <div class="auth-brand">
+                <div class="auth-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#grad)" />
+                        <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
+                        <defs>
+                            <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6366f1" />
+                                <stop offset="1" stop-color="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="auth-brand-name">SmartCare Analytics</span>
+            </div>
+
+            <!-- Tab switch -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+                <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <h2>Welcome back</h2>
+                <p class="auth-subtitle">Sign in to your admin account</p>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="admin@hospital.com" required />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+                <p id="loginError" class="auth-error"></p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <h2>Create account</h2>
+                <p class="auth-subtitle">Register as a new hospital admin</p>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="Dr. John Smith" required />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="admin@hospital.com" required />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Min. 6 characters" required />
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+                <p id="registerError" class="auth-error"></p>
             </form>
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
-    <nav class="sidebar glass" id="sidebar">
-        <h2>SmartCare Analytics</h2>
-        <ul>
-            <li><a href="#" class="nav-link active" data-target="dashboard"><span>Dashboard</span></a></li>
-            <li><a href="#" class="nav-link" data-target="analytics"><span>Predictive Analytics</span></a></li>
-            <li><a href="#" class="nav-link" data-target="input"><span>Add Patient Data</span></a></li>
-            <li><button id="logoutBtn" class="nav-link"><span>Logout</span></button></li>
-        </ul>
-        <button id="themeToggle" class="theme-toggle">Toggle Theme</button>
-    </nav>
+    <!-- ===================== APP SHELL ===================== -->
+    <div id="app" class="app hidden">
 
-    <main class="main-content" id="main">
-        <!-- Header -->
-        <header class="header">
-            <h1>Hospital Performance Dashboard</h1>
-            <div id="alertContainer" class="alert-container"></div>
-        </header>
-
-        <!-- Dashboard Section -->
-        <div id="section-dashboard" class="content-section active">
-            <!-- Filtering -->
-            <section class="filters">
-                <label>Department:
-                    <select id="filterDept">
-                        <option value="All">All Departments</option>
-                        <option value="Emergency">Emergency</option>
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Neurology">Neurology</option>
-                        <option value="Orthopedics">Orthopedics</option>
-                    </select>
-                </label>
-            </section>
-
-            <!-- Cards for key metrics -->
-            <section class="cards" id="cards">
-                <div class="card glass" id="card-patients">
-                    <h3>Total Patients</h3>
-                    <p id="patients-count">0</p>
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#grad2)" />
+                        <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
+                        <defs>
+                            <linearGradient id="grad2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6366f1" />
+                                <stop offset="1" stop-color="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
                 </div>
-                <div class="card glass" id="card-wait">
-                    <h3>Avg. Waiting Time</h3>
-                    <p id="wait-time">0 min</p>
-                </div>
-                <div class="card glass" id="card-beds">
-                    <h3>Bed Availability</h3>
-                    <p id="beds-available">0</p>
-                </div>
-                <div class="card glass" id="card-score">
-                    <h3>Efficiency Score</h3>
-                    <p id="efficiency-score">0.0</p>
-                </div>
-            </section>
-
-            <!-- Charts -->
-            <section class="charts" id="charts">
-                <div class="chart-container glass">
-                    <h2>Patient Distribution</h2>
-                    <canvas id="patientsChart"></canvas>
-                </div>
-                <div class="chart-container glass">
-                    <h2>Waiting Time Trends</h2>
-                    <canvas id="waitTimeChart"></canvas>
-                </div>
-                <div class="chart-container glass">
-                    <h2>Department Load</h2>
-                    <canvas id="deptLoadChart"></canvas>
-                </div>
-            </section>
-        </div>
-
-        <!-- Predictive Analytics Section -->
-        <div id="section-analytics" class="content-section" style="display: none;">
-            <h2>Predictive Analytics</h2>
-            <p style="margin-bottom: 2rem;">AI-powered prediction of next-day patient load based on recent trends.</p>
-            <div class="chart-container prediction-chart glass">
-                <h2>Next Day Load Forecast</h2>
-                <canvas id="predictionChart"></canvas>
+                <span class="sidebar-brand">SmartCare</span>
             </div>
-        </div>
 
-        <!-- Data Input Panel -->
-        <div id="section-input" class="content-section" style="display: none;">
-            <h2 style="margin-bottom: 2rem;">Add Patient Record Simulation</h2>
-            <section class="input-panel glass">
-                <form id="patientForm">
-                    <label>Department:
-                        <select name="department" required>
+            <nav class="sidebar-nav">
+                <p class="sidebar-section-label">Main</p>
+                <a href="#" class="nav-item active" data-target="dashboard" id="nav-dashboard">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-target="analytics" id="nav-analytics">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                    <span>Predictive AI</span>
+                    <span class="nav-badge">AI</span>
+                </a>
+                <a href="#" class="nav-item" data-target="alerts" id="nav-alerts">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span>Alerts</span>
+                    <span class="nav-badge alert-badge" id="alertBadgeCount">0</span>
+                </a>
+                <p class="sidebar-section-label">Data</p>
+                <a href="#" class="nav-item" data-target="input" id="nav-input">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>Add Patient</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <p class="user-name" id="userName">Admin</p>
+                        <p class="user-role">Hospital Admin</p>
+                    </div>
+                </div>
+                <div class="sidebar-actions">
+                    <button id="themeToggle" class="action-btn" title="Toggle Theme">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5" />
+                            <line x1="12" y1="1" x2="12" y2="3" />
+                            <line x1="12" y1="21" x2="12" y2="23" />
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                            <line x1="1" y1="12" x2="3" y2="12" />
+                            <line x1="21" y1="12" x2="23" y2="12" />
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                        </svg>
+                    </button>
+                    <button id="logoutBtn" class="action-btn" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- Floating Alert Toast Container -->
+            <div id="toastContainer" class="toast-container"></div>
+
+            <!-- ===== DASHBOARD SECTION ===== -->
+            <section id="section-dashboard" class="page active">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Hospital Overview</h1>
+                        <p class="page-subtitle">Real-time performance metrics — updated live</p>
+                    </div>
+                    <div class="header-controls">
+                        <select id="filterDept" class="select-control">
+                            <option value="All">All Departments</option>
                             <option value="Emergency">Emergency</option>
                             <option value="Cardiology">Cardiology</option>
                             <option value="Neurology">Neurology</option>
                             <option value="Orthopedics">Orthopedics</option>
                         </select>
-                    </label>
-                    <label>Arrival Time: <input type="datetime-local" name="arrival" required /></label>
-                    <label>Processing Time (min): <input type="number" name="processTime" min="0" required /></label>
-                    <label>Bed Requirement:
-                        <select name="needsBed">
-                            <option value="no">No</option>
-                            <option value="yes">Yes</option>
-                        </select>
-                    </label>
-                    <button type="submit">Submit Data</button>
-                </form>
-                <div style="margin-top: 2rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Testing the dashboard?
-                        Use the button below to generate 7 days of sample data instantly.</p>
-                    <button id="generateMockBtn"
-                        style="background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--primary); width: 100%; padding: 0.8rem; border-radius: var(--border-radius-md); cursor: pointer; font-weight: 500;">Generate
-                        Sample Data</button>
+                        <div class="live-indicator">
+                            <span class="live-dot"></span>
+                            <span>Live</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card" id="kpi-patients">
+                        <div class="kpi-icon kpi-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Total Patients</p>
+                            <p class="kpi-value" id="patients-count">—</p>
+                            <p class="kpi-delta" id="patients-delta">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card" id="kpi-wait">
+                        <div class="kpi-icon kpi-amber">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Avg. Wait Time</p>
+                            <p class="kpi-value" id="wait-time">—</p>
+                            <p class="kpi-delta" id="wait-delta">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card" id="kpi-beds">
+                        <div class="kpi-icon kpi-emerald">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Beds Available</p>
+                            <p class="kpi-value" id="beds-available">—</p>
+                            <p class="kpi-delta" id="beds-delta">of 100 total</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card" id="kpi-score">
+                        <div class="kpi-icon kpi-violet">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Efficiency Score</p>
+                            <p class="kpi-value" id="efficiency-score">—</p>
+                            <div class="score-bar-container">
+                                <div class="score-bar" id="scoreBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-grid">
+                    <div class="chart-card span-2">
+                        <div class="chart-header">
+                            <div>
+                                <h3>Patient Volume by Department</h3>
+                                <p class="chart-sub">Click a bar to drill down</p>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="patientsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Department Load</h3>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="deptLoadChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card span-3">
+                        <div class="chart-header">
+                            <div>
+                                <h3>Wait Time Trend</h3>
+                                <p class="chart-sub">Last 15 patient cases</p>
+                            </div>
+                        </div>
+                        <div class="chart-body tall">
+                            <canvas id="waitTimeChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </section>
-        </div>
-    </main>
+
+            <!-- ===== PREDICTIVE AI SECTION ===== -->
+            <section id="section-analytics" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Predictive AI Analytics</h1>
+                        <p class="page-subtitle">AI-powered forecasting using historical trend analysis</p>
+                    </div>
+                    <div class="ai-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                            height="16">
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2m0 2a8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8 8 8 0 0 0-8-8m.5 3v5.25l4.5 2.67-.75 1.23L11 13V7z" />
+                        </svg>
+                        AI Powered
+                    </div>
+                </div>
+
+                <!-- Prediction KPI Mini Cards -->
+                <div class="prediction-kpi-row" id="predictionKpiRow">
+                    <div class="pred-kpi-card">
+                        <p class="pred-label">Tomorrow's Predicted Load</p>
+                        <p class="pred-value" id="predTomorrowLoad">—</p>
+                    </div>
+                    <div class="pred-kpi-card">
+                        <p class="pred-label">Overload Risk</p>
+                        <p class="pred-value" id="predOverloadRisk">—</p>
+                    </div>
+                    <div class="pred-kpi-card">
+                        <p class="pred-label">Busiest Dept. Tomorrow</p>
+                        <p class="pred-value" id="predBusiestDept">—</p>
+                    </div>
+                    <div class="pred-kpi-card">
+                        <p class="pred-label">Trend</p>
+                        <p class="pred-value" id="predTrend">—</p>
+                    </div>
+                </div>
+
+                <!-- Prediction Chart -->
+                <div class="chart-card prediction-main">
+                    <div class="chart-header">
+                        <div>
+                            <h3>Patient Load Forecast — Next 3 Days</h3>
+                            <p class="chart-sub">Solid line = historical · Dashed line = AI prediction</p>
+                        </div>
+                    </div>
+                    <div class="chart-body" style="height:380px">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dept-wise Risk Table -->
+                <div class="chart-card" style="margin-top: 1.5rem;">
+                    <div class="chart-header">
+                        <h3>Department Risk Assessment</h3>
+                    </div>
+                    <div id="deptRiskTable" class="risk-table-container">
+                        <p class="empty-state">Generate sample data or add patients to see risk assessment.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== ALERTS SECTION ===== -->
+            <section id="section-alerts" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Smart Alert Center</h1>
+                        <p class="page-subtitle">Real-time threshold monitoring and notifications</p>
+                    </div>
+                    <button onclick="document.getElementById('alertLog').innerHTML = ''" class="btn-ghost">Clear
+                        All</button>
+                </div>
+
+                <div class="alert-threshold-cards">
+                    <div class="threshold-card">
+                        <h4>Wait Time Threshold</h4>
+                        <div class="threshold-control">
+                            <input type="range" id="threshWait" min="10" max="120" value="45"
+                                oninput="document.getElementById('threshWaitVal').textContent = this.value + ' min'">
+                            <span id="threshWaitVal">45 min</span>
+                        </div>
+                    </div>
+                    <div class="threshold-card">
+                        <h4>Bed Availability Threshold</h4>
+                        <div class="threshold-control">
+                            <input type="range" id="threshBed" min="1" max="50" value="10"
+                                oninput="document.getElementById('threshBedVal').textContent = this.value + ' beds'">
+                            <span id="threshBedVal">10 beds</span>
+                        </div>
+                    </div>
+                    <div class="threshold-card">
+                        <h4>Efficiency Score Threshold</h4>
+                        <div class="threshold-control">
+                            <input type="range" id="threshScore" min="10" max="90" value="60"
+                                oninput="document.getElementById('threshScoreVal').textContent = this.value">
+                            <span id="threshScoreVal">60</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="alertLog" class="alert-log">
+                    <p class="empty-state">No alerts yet. The system will monitor your hospital in real-time.</p>
+                </div>
+            </section>
+
+            <!-- ===== ADD PATIENT SECTION ===== -->
+            <section id="section-input" class="page">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Patient Data Entry</h1>
+                        <p class="page-subtitle">Simulate adding a patient record to Firestore</p>
+                    </div>
+                </div>
+
+                <div class="input-layout">
+                    <div class="input-form-card">
+                        <h3>New Patient Record</h3>
+                        <form id="patientForm">
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Emergency">🚨 Emergency</option>
+                                    <option value="Cardiology">❤️ Cardiology</option>
+                                    <option value="Neurology">🧠 Neurology</option>
+                                    <option value="Orthopedics">🦴 Orthopedics</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Arrival Date & Time</label>
+                                <input type="datetime-local" name="arrival" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Processing / Wait Time (minutes)</label>
+                                <input type="number" name="processTime" min="1" max="300" placeholder="e.g. 35"
+                                    required />
+                            </div>
+                            <div class="form-group">
+                                <label>Bed Required?</label>
+                                <select name="needsBed">
+                                    <option value="no">No — Outpatient</option>
+                                    <option value="yes">Yes — Inpatient Admit</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Severity Level</label>
+                                <select name="severity">
+                                    <option value="low">🟢 Low</option>
+                                    <option value="medium">🟡 Medium</option>
+                                    <option value="high">🔴 High — Critical</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary btn-full" id="submitBtn">Add Patient
+                                Record</button>
+                            <p id="submitMsg" class="auth-error" style="text-align:center; margin-top: 1rem;"></p>
+                        </form>
+                    </div>
+
+                    <!-- Right: Sample Data + Stats -->
+                    <div class="input-side">
+                        <div class="sample-data-card">
+                            <div class="sample-icon">⚡</div>
+                            <h3>Quick Demo Data</h3>
+                            <p>Instantly populate your dashboard with 7 days of realistic hospital data — including
+                                varied departments, wait times, and admission rates.</p>
+                            <button id="generateMockBtn" class="btn-secondary btn-full">Generate 7-Day Mock
+                                Data</button>
+                        </div>
+
+                        <div class="recent-entries-card">
+                            <h3>Recent Entries</h3>
+                            <ul id="recentEntries" class="entries-list">
+                                <li class="entry-placeholder">No entries yet</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
 
     <script type="module" src="scripts/app.js"></script>
 </body>

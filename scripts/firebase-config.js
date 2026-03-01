@@ -1,13 +1,5 @@
 /**
- * FIREBASE CONFIGURATION & SETUP INSTRUCTIONS
- * -------------------------------------------
- * 1. Go to https://console.firebase.google.com/
- * 2. Create a new project (e.g., "SmartCare Analytics Dashboard")
- * 3. Add a Web App to your project.
- * 4. Copy the `firebaseConfig` object and paste it below.
- * 5. Enable "Email/Password" Authentication in the Firebase Console.
- * 6. Create a "Firestore Database" in the Firebase Console.
- * 7. Set Firestore Rules to allow read/write for authenticated users (for development).
+ * firebase-config.js – initialise Firebase SDK (Compat version)
  */
 
 const firebaseConfig = {
@@ -20,7 +12,7 @@ const firebaseConfig = {
   measurementId: "G-LRYW2S7MYR"
 };
 
-// Initialize Firebase
+// Initialize once
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
