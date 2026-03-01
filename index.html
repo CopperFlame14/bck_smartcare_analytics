@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI‑Powered Hospital Administrative Analytics Dashboard</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay active">
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Admin Email" required />
+                <input type="password" id="loginPassword" placeholder="Password" required />
+                <button type="submit">Log In</button>
+                <p id="loginError" class="error-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <h2>SmartCare Analytics</h2>
+        <ul>
+            <li><a href="#" class="nav-link active" data-target="dashboard">Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-target="analytics">Predictive Analytics</a></li>
+            <li><a href="#" class="nav-link" data-target="input">Add Patient Data</a></li>
+            <li><button id="logoutBtn" class="nav-link">Logout</button></li>
+        </ul>
+        <button id="themeToggle" class="theme-toggle">Toggle Theme</button>
+    </nav>
+
+    <main class="main-content" id="main">
+        <!-- Header -->
+        <header class="header">
+            <h1>Hospital Performance Dashboard</h1>
+            <div id="alertContainer" class="alert-container"></div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <div id="section-dashboard" class="content-section active">
+            <!-- Filtering -->
+            <section class="filters">
+                <label>Department:
+                    <select id="filterDept">
+                        <option value="All">All Departments</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                    </select>
+                </label>
+            </section>
+
+            <!-- Cards for key metrics -->
+            <section class="cards" id="cards">
+                <div class="card" id="card-patients">
+                    <h3>Total Patients</h3>
+                    <p id="patients-count">0</p>
+                </div>
+                <div class="card" id="card-wait">
+                    <h3>Avg. Waiting Time</h3>
+                    <p id="wait-time">0 min</p>
+                </div>
+                <div class="card" id="card-beds">
+                    <h3>Bed Availability</h3>
+                    <p id="beds-available">0</p>
+                </div>
+                <div class="card" id="card-score">
+                    <h3>Efficiency Score</h3>
+                    <p id="efficiency-score">0.0</p>
+                </div>
+            </section>
+
+            <!-- Charts -->
+            <section class="charts" id="charts">
+                <div class="chart-container"><canvas id="patientsChart"></canvas></div>
+                <div class="chart-container"><canvas id="waitTimeChart"></canvas></div>
+                <div class="chart-container"><canvas id="deptLoadChart"></canvas></div>
+            </section>
+        </div>
+
+        <!-- Predictive Analytics Section -->
+        <div id="section-analytics" class="content-section" style="display: none;">
+            <h2>Predictive Analytics</h2>
+            <p>AI-powered prediction of next-day patient load based on recent trends.</p>
+            <div class="chart-container prediction-chart"><canvas id="predictionChart"></canvas></div>
+        </div>
+
+        <!-- Data Input Panel -->
+        <div id="section-input" class="content-section" style="display: none;">
+            <h2>Add Patient Record Simulation</h2>
+            <section class="input-panel">
+                <form id="patientForm">
+                    <label>Department:
+                        <select name="department" required>
+                            <option value="Emergency">Emergency</option>
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                        </select>
+                    </label>
+                    <label>Arrival Time: <input type="datetime-local" name="arrival" required /></label>
+                    <label>Processing Time (min): <input type="number" name="processTime" min="0" required /></label>
+                    <label>Bed Requirement:
+                        <select name="needsBed">
+                            <option value="no">No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </label>
+                    <button type="submit">Submit Data</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script type="module" src="scripts/app.js"></script>
+</body>
+
+</html>
