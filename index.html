@@ -32,15 +32,21 @@
 
     <!-- ===================== AUTH OVERLAY (LANDING PAGE) ===================== -->
     <div id="authOverlay" class="auth-overlay active">
-        <!-- Hero Section -->
-        <section class="landing-hero">
-            <div class="hero-content">
+        <!-- 1. Hero Section -->
+        <section class="landing-section hero-section" id="hero">
+            <div class="section-container hero-container">
                 <div class="hero-label">Healthcare Intelligence Platform</div>
                 <h1 class="hero-title">SmartCare <span class="text-gradient">AI</span></h1>
                 <p class="hero-subtitle">Next-generation hospital analytics powered by deep learning. Precision insights
                     for the modern healthcare infrastructure.</p>
+                <div class="hero-actions">
+                    <button class="btn-primary btn-lg"
+                        onclick="document.getElementById('features').scrollIntoView()">Explore Platform</button>
+                    <button class="btn-ghost btn-lg"
+                        onclick="document.getElementById('auth-section').scrollIntoView()">Sign In</button>
+                </div>
                 <div class="scroll-indicator">
-                    <span>Scroll to Begin</span>
+                    <span>Scroll to Explore</span>
                     <div class="mouse">
                         <div class="wheel"></div>
                     </div>
@@ -48,8 +54,142 @@
             </div>
         </section>
 
-        <!-- Login/Register Section -->
-        <section class="auth-section">
+        <!-- 2. About Section -->
+        <section class="landing-section about-section" id="about">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">The Future of <span class="text-gradient">Care</span></h2>
+                    <p class="section-desc">Bridging the gap between clinical data and actionable intelligence through
+                        advanced neural architectures.</p>
+                </div>
+                <div class="about-grid">
+                    <div class="about-card glass-card reveal">
+                        <div class="card-icon">🧠</div>
+                        <h3>Neural Diagnostics</h3>
+                        <p>Real-time anomaly detection across patient vitals and administrative trends.</p>
+                    </div>
+                    <div class="about-card glass-card reveal">
+                        <div class="card-icon">⚡</div>
+                        <h3>Instant Response</h3>
+                        <p>Sub-millisecond alert propagation for critical hospital events and resource gaps.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Features Section -->
+        <section class="landing-section features-section" id="features">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Platform <span class="text-gradient">Tracks</span></h2>
+                    <p class="section-desc">Specialized intelligence modules designed for hospital efficiency.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card glass-card reveal">
+                        <div class="feature-visual predictive-visual"></div>
+                        <div class="feature-content">
+                            <h3>Predictive AI</h3>
+                            <p>Anticipate patient volume spikes before they happen using our deep learning forecast
+                                engine.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card glass-card reveal">
+                        <div class="feature-visual insights-visual"></div>
+                        <div class="feature-content">
+                            <h3>Deep Insights</h3>
+                            <p>Drill down into department-level performance with multi-dimensional data visualizations.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="feature-card glass-card reveal">
+                        <div class="feature-visual alerts-visual"></div>
+                        <div class="feature-content">
+                            <h3>Smart Alerts</h3>
+                            <p>Autonomous monitoring system that learns your hospital's specific baseline metrics.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Timeline Section -->
+        <section class="landing-section timeline-section" id="timeline">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">The <span class="text-gradient">Journey</span></h2>
+                    <p class="section-desc">How SmartCare AI optimizes the patient lifecycle.</p>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-item reveal">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Admission</h4>
+                            <p>Real-time intake analysis and bed allocation prediction.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item reveal">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Treatment</h4>
+                            <p>AI-assisted wait-time tracking and resource optimization.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item reveal">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Recovery</h4>
+                            <p>Continuous monitoring and anomaly detection for early warning.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item reveal">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Discharge</h4>
+                            <p>Automated efficiency analytics and resource reclamation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Contact Section / Final CTA -->
+        <section class="landing-section contact-section" id="contact">
+            <div class="section-container">
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h2 class="section-title">Get in <span class="text-gradient">Touch</span></h2>
+                        <p>Interested in deploying SmartCare AI at your facility? Join the waitlist for our next
+                            hardware integration phase.</p>
+                        <div class="contact-methods">
+                            <div class="method glass-card">
+                                <span>Email</span>
+                                <strong>hello@smartcare.ai</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-form-wrapper glass-card reveal">
+                        <form id="landingContact" class="modern-form">
+                            <div class="form-group">
+                                <label>Your Name</label>
+                                <input type="text" placeholder="John Doe" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Hospital / Organization</label>
+                                <input type="text" placeholder="General Medical Center" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea placeholder="How can we help?"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary btn-full">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Auth Section -->
+        <section class="landing-section auth-section" id="auth-section">
             <div class="auth-container">
                 <!-- Branding -->
                 <div class="auth-brand">
