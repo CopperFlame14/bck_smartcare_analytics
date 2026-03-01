@@ -67,12 +67,114 @@ html {
 
 body {
   font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg-base) radial-gradient(60% 60% at 50% 20%, rgba(99,184,127,0.03), transparent 60%);
+  background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
   font-size: 15px;
   transition: background 0.3s, color 0.3s;
+  position: relative;
+}
+
+/* ===== ACTIVE LIVING BACKGROUND ===== */
+.bg-ambient-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-ambient-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.02;
+  pointer-events: none;
+}
+
+.aurora-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.aurora-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+  animation: float-1 30s ease-in-out infinite;
+}
+
+.aurora-2 {
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(16,185,129,0.03) 0%, transparent 60%);
+  top: 50%;
+  right: -300px;
+  animation: float-2 35s ease-in-out infinite;
+}
+
+.aurora-3 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 65%);
+  bottom: -150px;
+  left: 30%;
+  animation: float-3 32s ease-in-out infinite;
+}
+
+@keyframes float-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(100px, -50px, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-50px, 100px, 0) scale(0.95);
+  }
+  75% {
+    transform: translate3d(150px, 50px, 0) scale(1.05);
+  }
+}
+
+@keyframes float-2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-80px, -120px, 0) scale(1.15);
+  }
+  66% {
+    transform: translate3d(120px, 60px, 0) scale(0.9);
+  }
+}
+
+@keyframes float-3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  20% {
+    transform: translate3d(-60px, 80px, 0) scale(1.08);
+  }
+  40% {
+    transform: translate3d(80px, -40px, 0) scale(0.92);
+  }
+  60% {
+    transform: translate3d(-40px, -100px, 0) scale(1.12);
+  }
+  80% {
+    transform: translate3d(100px, 60px, 0) scale(0.96);
+  }
 }
 
 .hidden {
