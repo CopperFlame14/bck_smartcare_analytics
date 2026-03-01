@@ -9,7 +9,13 @@ export function updatePredictionChart(dataRecords) {
     const dailyCounts = {};
     dataRecords.forEach(record => {
         if (!record.arrival) return;
-        const dateStr = record.arrival.toDate().toISOString().split('T')[0];
+        let dateObj;
+        if (record.arrival.toDate) {
+            dateObj = record.arrival.toDate();
+        } else {
+            dateObj = new Date(record.arrival);
+        }
+        const dateStr = dateObj.toISOString().split('T')[0];
         dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
     });
 
@@ -63,18 +69,23 @@ export function updatePredictionChart(dataRecords) {
                     {
                         label: 'Historical Patient Load',
                         data: historyData,
-                        borderColor: '#0066ff',
-                        backgroundColor: 'rgba(0,102,255,0.1)',
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
-                        tension: 0.3
+                        tension: 0.4,
+                        pointRadius: 4
                     },
                     {
                         label: 'Predicted Patient Load',
                         data: predictData,
-                        borderColor: '#ff9900',
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.3
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                        borderDash: [6, 4],
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#f59e0b'
                     }
                 ]
             },

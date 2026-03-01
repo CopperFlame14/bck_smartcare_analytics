@@ -5,6 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI‑Powered Hospital Administrative Analytics Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="styles/main.css" />
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -17,7 +24,7 @@
 <body>
     <!-- Login Overlay -->
     <div id="loginOverlay" class="login-overlay active">
-        <div class="login-box">
+        <div class="login-box glass">
             <h2>Admin Login</h2>
             <form id="loginForm">
                 <input type="email" id="loginEmail" placeholder="Admin Email" required />
@@ -29,13 +36,13 @@
     </div>
 
     <!-- Sidebar Navigation -->
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar glass" id="sidebar">
         <h2>SmartCare Analytics</h2>
         <ul>
-            <li><a href="#" class="nav-link active" data-target="dashboard">Dashboard</a></li>
-            <li><a href="#" class="nav-link" data-target="analytics">Predictive Analytics</a></li>
-            <li><a href="#" class="nav-link" data-target="input">Add Patient Data</a></li>
-            <li><button id="logoutBtn" class="nav-link">Logout</button></li>
+            <li><a href="#" class="nav-link active" data-target="dashboard"><span>Dashboard</span></a></li>
+            <li><a href="#" class="nav-link" data-target="analytics"><span>Predictive Analytics</span></a></li>
+            <li><a href="#" class="nav-link" data-target="input"><span>Add Patient Data</span></a></li>
+            <li><button id="logoutBtn" class="nav-link"><span>Logout</span></button></li>
         </ul>
         <button id="themeToggle" class="theme-toggle">Toggle Theme</button>
     </nav>
@@ -64,19 +71,19 @@
 
             <!-- Cards for key metrics -->
             <section class="cards" id="cards">
-                <div class="card" id="card-patients">
+                <div class="card glass" id="card-patients">
                     <h3>Total Patients</h3>
                     <p id="patients-count">0</p>
                 </div>
-                <div class="card" id="card-wait">
+                <div class="card glass" id="card-wait">
                     <h3>Avg. Waiting Time</h3>
                     <p id="wait-time">0 min</p>
                 </div>
-                <div class="card" id="card-beds">
+                <div class="card glass" id="card-beds">
                     <h3>Bed Availability</h3>
                     <p id="beds-available">0</p>
                 </div>
-                <div class="card" id="card-score">
+                <div class="card glass" id="card-score">
                     <h3>Efficiency Score</h3>
                     <p id="efficiency-score">0.0</p>
                 </div>
@@ -84,23 +91,35 @@
 
             <!-- Charts -->
             <section class="charts" id="charts">
-                <div class="chart-container"><canvas id="patientsChart"></canvas></div>
-                <div class="chart-container"><canvas id="waitTimeChart"></canvas></div>
-                <div class="chart-container"><canvas id="deptLoadChart"></canvas></div>
+                <div class="chart-container glass">
+                    <h2>Patient Distribution</h2>
+                    <canvas id="patientsChart"></canvas>
+                </div>
+                <div class="chart-container glass">
+                    <h2>Waiting Time Trends</h2>
+                    <canvas id="waitTimeChart"></canvas>
+                </div>
+                <div class="chart-container glass">
+                    <h2>Department Load</h2>
+                    <canvas id="deptLoadChart"></canvas>
+                </div>
             </section>
         </div>
 
         <!-- Predictive Analytics Section -->
         <div id="section-analytics" class="content-section" style="display: none;">
             <h2>Predictive Analytics</h2>
-            <p>AI-powered prediction of next-day patient load based on recent trends.</p>
-            <div class="chart-container prediction-chart"><canvas id="predictionChart"></canvas></div>
+            <p style="margin-bottom: 2rem;">AI-powered prediction of next-day patient load based on recent trends.</p>
+            <div class="chart-container prediction-chart glass">
+                <h2>Next Day Load Forecast</h2>
+                <canvas id="predictionChart"></canvas>
+            </div>
         </div>
 
         <!-- Data Input Panel -->
         <div id="section-input" class="content-section" style="display: none;">
-            <h2>Add Patient Record Simulation</h2>
-            <section class="input-panel">
+            <h2 style="margin-bottom: 2rem;">Add Patient Record Simulation</h2>
+            <section class="input-panel glass">
                 <form id="patientForm">
                     <label>Department:
                         <select name="department" required>
@@ -120,6 +139,13 @@
                     </label>
                     <button type="submit">Submit Data</button>
                 </form>
+                <div style="margin-top: 2rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Testing the dashboard?
+                        Use the button below to generate 7 days of sample data instantly.</p>
+                    <button id="generateMockBtn"
+                        style="background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--primary); width: 100%; padding: 0.8rem; border-radius: var(--border-radius-md); cursor: pointer; font-weight: 500;">Generate
+                        Sample Data</button>
+                </div>
             </section>
         </div>
     </main>

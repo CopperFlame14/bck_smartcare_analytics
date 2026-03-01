@@ -31,7 +31,13 @@ function renderDashboard(records, filterDept) {
         ? records
         : records.filter(r => r.department === filterDept);
 
-    if (filteredRecords.length === 0) return;
+    if (filteredRecords.length === 0) {
+        document.getElementById('patients-count').textContent = 0;
+        document.getElementById('wait-time').textContent = '0 min';
+        document.getElementById('beds-available').textContent = 100;
+        document.getElementById('efficiency-score').textContent = 100;
+        return;
+    }
 
     // Process Metrics
     const totalPatients = filteredRecords.length;
@@ -43,9 +49,17 @@ function renderDashboard(records, filterDept) {
     const bedsAvail = Math.max(0, maxBeds - bedsNeeded);
 
     // Calculate Efficiency Score (100 is best)
-    // formula: 100 - (avgWait/2) - (bedUtilizationModifier)
+    // formula: weighting factors for wait time and resource utilization
+    const waitWeight = Math.min(40, (avgWait / 60) * 40); // Max 40 pt deduction for wait
     const bedUtil = (bedsNeeded / maxBeds) * 100;
-    let score = 100 - (avgWait * 0.5) - (bedUtil * 0.2);
+    const bedWeight = Math.min(30, (bedUtil / 100) * 30); // Max 30 pt deduction for crowding
+
+    // Staff Utilization (Mock logic: based on patient load vs capacity)
+    const staffCapacity = 50;
+    const staffUtil = Math.min(100, (totalPatients / staffCapacity) * 100);
+    const staffWeight = Math.min(30, (staffUtil / 100) * 30);
+
+    let score = 100 - waitWeight - bedWeight - (staffUtil > 90 ? 10 : 0);
     score = Math.max(0, Math.min(100, Math.round(score)));
 
     // Update DOM Cards
@@ -58,51 +72,76 @@ function renderDashboard(records, filterDept) {
     checkAlerts({ avgWait: Math.round(avgWait), beds: bedsAvail, score });
 
     // Process Chart Data
-    const deptCounts = {};
+    const deptData = {};
     filteredRecords.forEach(r => {
-        deptCounts[r.department] = (deptCounts[r.department] || 0) + 1;
+        if (!deptData[r.department]) deptData[r.department] = { count: 0, totalWait: 0 };
+        deptData[r.department].count++;
+        deptData[r.department].totalWait += r.processTime || 0;
     });
 
-    updateCharts(deptCounts, filteredRecords);
+    updateCharts(deptData, filteredRecords);
 }
 
-function updateCharts(deptCounts, records) {
-    // Extract context
+function updateCharts(deptData, records) {
     const ctxPatients = document.getElementById('patientsChart').getContext('2d');
     const ctxWait = document.getElementById('waitTimeChart').getContext('2d');
     const ctxLoad = document.getElementById('deptLoadChart').getContext('2d');
 
-    // Colors
-    const bgColors = ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)'];
-    const borderColors = ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0'];
+    const labels = Object.keys(deptData);
+    const counts = labels.map(l => deptData[l].count);
+    const avgWaits = labels.map(l => Math.round(deptData[l].totalWait / deptData[l].count));
+
+    // Premium Color Palette
+    const colors = {
+        primary: '#3b82f6',
+        secondary: '#ef4444',
+        accent: '#f59e0b',
+        success: '#10b981',
+        purple: '#8b5cf6',
+        pink: '#ec4899'
+    };
+    const bgColors = [colors.primary, colors.purple, colors.pink, colors.accent, colors.success];
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+        },
+        onClick: (evt, elements) => {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const label = labels[index];
+                console.log(`Drill-down for ${label} requested.`);
+            }
+        }
+    };
 
     // 1. Bar Chart: Patients by Department
     if (patientsChart) {
-        patientsChart.data.labels = Object.keys(deptCounts);
-        patientsChart.data.datasets[0].data = Object.values(deptCounts);
+        patientsChart.data.labels = labels;
+        patientsChart.data.datasets[0].data = counts;
         patientsChart.update();
     } else {
         patientsChart = new Chart(ctxPatients, {
             type: 'bar',
             data: {
-                labels: Object.keys(deptCounts),
+                labels: labels,
                 datasets: [{
                     label: 'Total Patients',
-                    data: Object.values(deptCounts),
-                    backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: 1
+                    data: counts,
+                    backgroundColor: bgColors.map(c => c + 'cc'),
+                    borderRadius: 8
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Patients by Department' } } }
+            options: { ...chartOptions, scales: { y: { beginAtZero: true } } }
         });
     }
 
-    // 2. Line Chart: Avg Wait Time Trend (simulate by processing time vs record index)
-    // To keep it simple, we plot process time of the last N records
-    const recentRecords = records.slice(-10);
+    // 2. Line Chart: Avg Wait Time Trend
+    const recentRecords = records.slice(-15);
     const waitData = recentRecords.map(r => r.processTime);
-    const waitLabels = recentRecords.map((r, i) => `Pt ${i + 1}`);
+    const waitLabels = recentRecords.map((r, i) => `Case ${i + 1}`);
 
     if (waitTimeChart) {
         waitTimeChart.data.labels = waitLabels;
@@ -114,34 +153,38 @@ function updateCharts(deptCounts, records) {
             data: {
                 labels: waitLabels,
                 datasets: [{
-                    label: 'Recent Processing Times (min)',
+                    label: 'Processing Time (min)',
                     data: waitData,
-                    fill: false,
-                    borderColor: '#FF6384',
-                    tension: 0.1
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primary + '22',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Wait Time Trend' } } }
+            options: chartOptions
         });
     }
 
     // 3. Pie Chart: Workload (Dept Load)
     if (deptLoadChart) {
-        deptLoadChart.data.labels = Object.keys(deptCounts);
-        deptLoadChart.data.datasets[0].data = Object.values(deptCounts);
+        deptLoadChart.data.labels = labels;
+        deptLoadChart.data.datasets[0].data = counts;
         deptLoadChart.update();
     } else {
         deptLoadChart = new Chart(ctxLoad, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
-                labels: Object.keys(deptCounts),
+                labels: labels,
                 datasets: [{
-                    data: Object.values(deptCounts),
+                    data: counts,
                     backgroundColor: bgColors,
-                    borderColor: borderColors,
+                    hoverOffset: 15,
+                    borderWidth: 0
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Department Workload' } } }
+            options: { ...chartOptions, cutout: '70%' }
         });
     }
 }

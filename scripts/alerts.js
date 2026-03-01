@@ -12,7 +12,7 @@ export function checkAlerts(metrics) {
     const createAlert = (id, message) => {
         if (document.getElementById(`alert-${id}`)) return; // already showing
         const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert';
+        alertDiv.className = 'alert glass';
         alertDiv.id = `alert-${id}`;
         alertDiv.textContent = `⚠️ Alert: ${message}`;
         container.appendChild(alertDiv);

@@ -3,6 +3,7 @@ import { initTheme } from './theme.js';
 import { initAuth } from './auth.js';
 import { initDashboard } from './dashboard.js';
 import { initInput } from './input.js';
+import { generateMockData } from './mockData.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize simple things
@@ -34,5 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // When logged in successfully, start the dashboard listeners
         initDashboard();
         initInput();
+
+        // Mock data listener
+        const mockBtn = document.getElementById('generateMockBtn');
+        if (mockBtn) {
+            mockBtn.addEventListener('click', generateMockData);
+        }
     });
 });
