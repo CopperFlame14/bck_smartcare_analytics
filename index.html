@@ -25,73 +25,92 @@
     <!-- ===================== AMBIENT BACKGROUND ===================== -->
     <div class="bg-ambient-wrapper">
         <video class="bg-video" autoplay muted loop playsinline
-            src="https://sdg-hackthon.vercel.app/videos/hero.mp4"></video>
+            src="https://cdn.pixabay.com/video/2017/01/01/6973-197914400_large.mp4"></video>
         <div class="bg-overlay-gradient"></div>
         <div class="bg-overlay-radial"></div>
     </div>
 
-    <!-- ===================== AUTH OVERLAY ===================== -->
+    <!-- ===================== AUTH OVERLAY (LANDING PAGE) ===================== -->
     <div id="authOverlay" class="auth-overlay active">
-        <div class="auth-container">
-            <!-- Branding -->
-            <div class="auth-brand">
-                <div class="auth-logo">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                        <rect width="32" height="32" rx="8" fill="url(#grad)" />
-                        <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
-                        <defs>
-                            <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#6366f1" />
-                                <stop offset="1" stop-color="#8b5cf6" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
+        <!-- Hero Section -->
+        <section class="landing-hero">
+            <div class="hero-content">
+                <div class="hero-label">Healthcare Intelligence Platform</div>
+                <h1 class="hero-title">SmartCare <span class="text-gradient">AI</span></h1>
+                <p class="hero-subtitle">Next-generation hospital analytics powered by deep learning. Precision insights
+                    for the modern healthcare infrastructure.</p>
+                <div class="scroll-indicator">
+                    <span>Scroll to Begin</span>
+                    <div class="mouse">
+                        <div class="wheel"></div>
+                    </div>
                 </div>
-                <span class="auth-brand-name">SmartCare Analytics</span>
             </div>
+        </section>
 
-            <!-- Tab switch -->
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
-                <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Register</button>
+        <!-- Login/Register Section -->
+        <section class="auth-section">
+            <div class="auth-container">
+                <!-- Branding -->
+                <div class="auth-brand">
+                    <div class="auth-logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <rect width="32" height="32" rx="8" fill="url(#grad)" />
+                            <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
+                            <defs>
+                                <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#10b981" />
+                                    <stop offset="1" stop-color="#34d399" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="auth-brand-name">SmartCare Analytics</span>
+                </div>
+
+                <!-- Tab switch -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+                    <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+                    <h2>Welcome back</h2>
+                    <p class="auth-subtitle">Sign in to your admin account</p>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="admin@hospital.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required />
+                    </div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                    <p id="loginError" class="auth-error"></p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form">
+                    <h2>Create account</h2>
+                    <p class="auth-subtitle">Register as a new hospital admin</p>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" placeholder="Dr. John Smith" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" placeholder="admin@hospital.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" placeholder="Min. 6 characters" required />
+                    </div>
+                    <button type="submit" class="btn-primary">Create Account</button>
+                    <p id="registerError" class="auth-error"></p>
+                </form>
             </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" class="auth-form active">
-                <h2>Welcome back</h2>
-                <p class="auth-subtitle">Sign in to your admin account</p>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" placeholder="admin@hospital.com" required />
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" placeholder="••••••••" required />
-                </div>
-                <button type="submit" class="btn-primary">Sign In</button>
-                <p id="loginError" class="auth-error"></p>
-            </form>
-
-            <!-- Register Form -->
-            <form id="registerForm" class="auth-form">
-                <h2>Create account</h2>
-                <p class="auth-subtitle">Register as a new hospital admin</p>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="regName" placeholder="Dr. John Smith" required />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="regEmail" placeholder="admin@hospital.com" required />
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="regPassword" placeholder="Min. 6 characters" required />
-                </div>
-                <button type="submit" class="btn-primary">Create Account</button>
-                <p id="registerError" class="auth-error"></p>
-            </form>
-        </div>
+        </section>
     </div>
 
     <!-- ===================== APP SHELL ===================== -->
@@ -106,8 +125,8 @@
                         <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
                         <defs>
                             <linearGradient id="grad2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#6366f1" />
-                                <stop offset="1" stop-color="#8b5cf6" />
+                                <stop stop-color="#10b981" />
+                                <stop offset="1" stop-color="#34d399" />
                             </linearGradient>
                         </defs>
                     </svg>
