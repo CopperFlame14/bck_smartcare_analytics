@@ -1,4 +1,4 @@
-// dashboard.js — Real-time Firestore listeners + Chart.js charts
+// dashboard.js — Real-time Firestore listeners + Chart.js charts + Discharge System
 import { db } from './firebase-config.js';
 import { checkAlerts } from './alerts.js';
 import { updatePredictionSection } from './predict.js';
@@ -6,6 +6,9 @@ import { updateInsights } from './insights.js';
 
 // Chart instances
 let chartPatients = null, chartWaitTime = null, chartDeptLoad = null;
+
+// Dept emoji map
+const DEPT_EMOJI = { Emergency: '🚨', Cardiology: '❤️', Neurology: '🧠', Orthopedics: '🦴' };
 
 // Theme-aware chart colors
 function getChartColors() {
@@ -77,6 +80,20 @@ function render(records, filterDept) {
         sel.onchange = () => render(_allRecords, sel.value);
     }
 
+    // ── Separate active vs discharged ──
+    const activeRecords = filtered.filter(r => r.status !== 'discharged');
+    const dischargedRecords = filtered.filter(r => r.status === 'discharged');
+    const activeAll = records.filter(r => r.status !== 'discharged');
+    const dischargedAll = records.filter(r => r.status === 'discharged');
+
+    // Count discharged today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dischargedToday = dischargedAll.filter(r => {
+        const dt = r.dischargedAt?.toDate ? r.dischargedAt.toDate() : (r.dischargedAt ? new Date(r.dischargedAt) : null);
+        return dt && dt >= today;
+    }).length;
+
     // ── Empty guard ──
     if (filtered.length === 0) {
         setKpi('patients-count', '0');
@@ -86,31 +103,39 @@ function render(records, filterDept) {
         document.getElementById('scoreBar').style.width = '100%';
         document.getElementById('patients-delta').textContent = 'No data yet';
         document.getElementById('wait-delta').textContent = 'No data yet';
+        renderActivePatients([]);
         return;
     }
 
-    // ── Metrics ──
-    const total = filtered.length;
-    const totalWait = filtered.reduce((s, r) => s + (r.processTime || 0), 0);
-    const avgWait = Math.round(totalWait / total);
-    const bedsNeeded = filtered.filter(r => r.needsBed).length;
+    // ── Metrics (based on ACTIVE patients) ──
+    const currentActive = activeRecords.length;
+    const totalAll = filtered.length;
+    const totalWait = activeRecords.reduce((s, r) => s + (r.processTime || 0), 0);
+    const avgWait = currentActive > 0 ? Math.round(totalWait / currentActive) : 0;
+    const bedsNeeded = activeRecords.filter(r => r.needsBed).length;
     const bedsAvail = Math.max(0, 100 - bedsNeeded);
 
-    // Efficiency score (0–100)
+    // ── Efficiency score (now includes discharge rate) ──
     const waitPenalty = Math.min(40, (avgWait / 90) * 40);
-    const bedPenalty = Math.min(30, (bedsNeeded / 100) * 30);
-    const staffRatio = total / 50;
-    const staffPenalty = staffRatio > 0.9 ? Math.min(20, (staffRatio - 0.9) * 100) : 0;
-    const score = Math.max(0, Math.round(100 - waitPenalty - bedPenalty - staffPenalty));
+    const bedPenalty = Math.min(25, (bedsNeeded / 100) * 25);
 
-    // KPI deltas (compare to avg of first half vs second half)
-    const half = Math.floor(total / 2);
-    const firstHalf = filtered.slice(0, half);
-    const secondHalf = filtered.slice(half);
+    // Discharge rate bonus: reward fast turnover
+    const dischargePct = totalAll > 0 ? (dischargedRecords.length / totalAll) * 100 : 0;
+    const dischargeBonus = Math.min(15, (dischargePct / 100) * 15); // up to +15
+
+    // Overstay penalty: active patients with long waits penalize
+    const longStay = activeRecords.filter(r => (r.processTime || 0) > 60).length;
+    const overstayPenalty = Math.min(15, (longStay / Math.max(1, currentActive)) * 15);
+
+    const score = Math.max(0, Math.min(100, Math.round(100 - waitPenalty - bedPenalty - overstayPenalty + dischargeBonus)));
+
+    // KPI deltas
+    const half = Math.floor(activeRecords.length / 2);
+    const firstHalf = activeRecords.slice(0, half);
     const prevAvgWait = firstHalf.length ? Math.round(firstHalf.reduce((s, r) => s + (r.processTime || 0), 0) / firstHalf.length) : avgWait;
     const waitDiff = avgWait - prevAvgWait;
 
-    setKpi('patients-count', total);
+    setKpi('patients-count', currentActive);
     setKpi('wait-time', avgWait + ' min');
     setKpi('beds-available', bedsAvail);
     setKpi('efficiency-score', score);
@@ -121,13 +146,22 @@ function render(records, filterDept) {
             score > 40 ? 'linear-gradient(90deg, #f59e0b, #ef4444)' :
                 '#ef4444';
 
-    document.getElementById('patients-delta').textContent = `${total} records loaded`;
+    document.getElementById('patients-delta').textContent = `${currentActive} active · ${dischargedRecords.length} discharged`;
     document.getElementById('wait-delta').textContent = waitDiff === 0
         ? 'Stable vs previous' : (waitDiff > 0 ? `▲ ${waitDiff} min vs average` : `▼ ${Math.abs(waitDiff)} min vs average`);
     document.getElementById('beds-delta').textContent = `${bedsNeeded} occupied · ${bedsAvail} of 100 total`;
 
+    // Active/discharged counters
+    const activeCountEl = document.getElementById('activePatientCount');
+    if (activeCountEl) activeCountEl.textContent = activeAll.length;
+    const dischCountEl = document.getElementById('dischargedTodayCount');
+    if (dischCountEl) dischCountEl.textContent = `${dischargedToday} discharged today`;
+
     // Alerts
     checkAlerts({ avgWait, beds: bedsAvail, score });
+
+    // Render active patients table
+    renderActivePatients(activeAll);
 
     // ── Chart Data ──
     const deptData = {};
@@ -141,6 +175,59 @@ function render(records, filterDept) {
 
     updateCharts(labels, counts, filtered);
 }
+
+// ─────────────────────────────────────────────
+// ACTIVE PATIENTS TABLE + DISCHARGE
+// ─────────────────────────────────────────────
+function renderActivePatients(activePatients) {
+    const tbody = document.getElementById('activePatientBody');
+    if (!tbody) return;
+
+    if (activePatients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No active patients — all discharged! 🎉</td></tr>';
+        return;
+    }
+
+    // Sort by most recent first
+    const sorted = [...activePatients].sort((a, b) => {
+        const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const db_ = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return db_ - da;
+    });
+
+    tbody.innerHTML = sorted.map(r => {
+        const emoji = DEPT_EMOJI[r.department] || '🏥';
+        const severityClass = r.severity === 'high' ? 'risk-high' : r.severity === 'medium' ? 'risk-med' : 'risk-low';
+        const severityLabel = r.severity === 'high' ? 'Critical' : r.severity === 'medium' ? 'Medium' : 'Low';
+        const bedIcon = r.needsBed ? '🛏️ Yes' : '—';
+        const admitted = r.arrival?.toDate
+            ? r.arrival.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : r.arrival ? new Date(r.arrival).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+
+        return `<tr>
+            <td><span>${emoji}</span> <strong>${r.department}</strong></td>
+            <td><span class="risk-pill ${severityClass}">${severityLabel}</span></td>
+            <td>${r.processTime || 0} min</td>
+            <td>${bedIcon}</td>
+            <td style="font-size:0.8rem;color:var(--text-secondary)">${admitted}</td>
+            <td><button class="btn-discharge" onclick="window.__dischargePatient('${r.id}')">Discharge</button></td>
+        </tr>`;
+    }).join('');
+}
+
+// Global discharge function (called from inline onclick)
+window.__dischargePatient = async function (docId) {
+    try {
+        await db.collection('hospitalData').doc(docId).update({
+            status: 'discharged',
+            dischargedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('✅ Patient discharged:', docId);
+    } catch (err) {
+        console.error('Discharge error:', err);
+        alert('Failed to discharge patient: ' + err.message);
+    }
+};
 
 function setKpi(id, val) {
     const el = document.getElementById(id);

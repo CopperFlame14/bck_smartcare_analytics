@@ -36,6 +36,7 @@ export function initInput() {
                 processTime,
                 needsBed,
                 severity,
+                status: 'active',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             submitMsg.textContent = '✅ Patient record added successfully!';

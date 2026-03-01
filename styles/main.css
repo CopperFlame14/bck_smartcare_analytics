@@ -1188,6 +1188,40 @@ body {
   background: var(--bg-card-hover);
 }
 
+/* ===== PATIENT TABLE & DISCHARGE ===== */
+.active-patients-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.patient-table td {
+  vertical-align: middle;
+}
+
+.btn-discharge {
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-discharge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+}
+
+.btn-discharge:active {
+  transform: translateY(0);
+}
+
 /* ===== EMPTY STATE ===== */
 .empty-state {
   text-align: center;

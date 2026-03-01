@@ -30,15 +30,25 @@ export async function generateMockData() {
                 const arrival = new Date(date);
                 arrival.setHours(Math.floor(Math.random() * 22) + 1, Math.floor(Math.random() * 60));
 
-                const ref = db.collection('hospitalData').doc();
-                batch.set(ref, {
+                // Older patients are more likely discharged; today's are active
+                const isDischarged = dayOffset > 0 && Math.random() < 0.65;
+                const dischargedAt = isDischarged
+                    ? new Date(arrival.getTime() + (processTime + Math.floor(Math.random() * 60) + 15) * 60000)
+                    : null;
+
+                const record = {
                     department: dept,
                     arrival,
                     processTime,
                     needsBed: severity === 'high' || (severity === 'medium' && Math.random() > 0.5),
                     severity,
+                    status: isDischarged ? 'discharged' : 'active',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                if (dischargedAt) record.dischargedAt = dischargedAt;
+
+                const ref = db.collection('hospitalData').doc();
+                batch.set(ref, record);
                 count++;
             }
         }

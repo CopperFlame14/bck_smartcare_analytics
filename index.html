@@ -223,7 +223,7 @@
                             </svg>
                         </div>
                         <div class="kpi-content">
-                            <p class="kpi-label">Total Patients</p>
+                            <p class="kpi-label">Current Patients</p>
                             <p class="kpi-value" id="patients-count">—</p>
                             <p class="kpi-delta" id="patients-delta">Loading...</p>
                         </div>
@@ -302,6 +302,38 @@
                         <div class="chart-body tall">
                             <canvas id="waitTimeChart"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Active Patients Table -->
+                <div class="chart-card" style="margin-top:1.5rem">
+                    <div class="chart-header">
+                        <div>
+                            <h3>🏥 Active Patients</h3>
+                            <p class="chart-sub">Currently admitted — <span id="activePatientCount"
+                                    style="color:var(--emerald);font-weight:600">0</span> active · <span
+                                    id="dischargedTodayCount" style="color:var(--text-muted)">0 discharged today</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="active-patients-container" style="padding:0 1.25rem 1.25rem">
+                        <table class="risk-table patient-table" id="activePatientTable">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Severity</th>
+                                    <th>Wait Time</th>
+                                    <th>Bed</th>
+                                    <th>Admitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activePatientBody">
+                                <tr>
+                                    <td colspan="6" class="empty-state">No active patients</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
