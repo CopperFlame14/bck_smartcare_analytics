@@ -1,5 +1,5 @@
 // auth.js – Authentication with Multi-Hospital Support
-// On register: creates a new hospital + links user to it
+// On register: creates Firebase Auth user → Firestore hospital → Firestore user profile
 // On login: fetches user's hospitalId → sets global context
 import { auth, db, setHospitalId } from './firebase-config.js';
 
@@ -11,26 +11,48 @@ window.switchTab = function (tab) {
     document.getElementById('registerForm').classList.toggle('active', tab === 'register');
 };
 
+// Track whether we just registered (to handle the race condition)
+let _pendingRegistration = false;
+let _pendingHospitalId = null;
+let _pendingHospitalName = null;
+
 export function initAuth(onLogin) {
     // Firebase auth state listener
     auth.onAuthStateChanged(async user => {
-        const loginVideo = document.getElementById('bgVideoLogin');
-        const dashVideo = document.getElementById('bgVideoDashboard');
 
         if (user) {
             try {
-                // Fetch user profile to get their hospitalId
-                const userDoc = await db.collection('users').doc(user.uid).get();
-
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    setHospitalId(userData.hospitalId);
-
-                    // Update sidebar UI
+                // If we just registered, the user doc was already created in the submit handler
+                // but Firestore might need a moment. Use the pending data if available.
+                if (_pendingRegistration && _pendingHospitalId) {
+                    setHospitalId(_pendingHospitalId);
                     const hospitalNameEl = document.getElementById('hospitalName');
-                    if (hospitalNameEl) hospitalNameEl.textContent = userData.hospitalName || 'My Hospital';
+                    if (hospitalNameEl) hospitalNameEl.textContent = _pendingHospitalName || 'My Hospital';
+                    _pendingRegistration = false;
+                    _pendingHospitalId = null;
+                    _pendingHospitalName = null;
                 } else {
-                    console.warn('⚠️ User doc not found — this should not happen');
+                    // Normal login — fetch user profile from Firestore
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        setHospitalId(userData.hospitalId);
+                        const hospitalNameEl = document.getElementById('hospitalName');
+                        if (hospitalNameEl) hospitalNameEl.textContent = userData.hospitalName || 'My Hospital';
+                    } else {
+                        // Retry once after a short delay (Firestore write may still be propagating)
+                        console.log('⏳ User doc not found yet, retrying in 1s...');
+                        await new Promise(r => setTimeout(r, 1000));
+                        const retryDoc = await db.collection('users').doc(user.uid).get();
+                        if (retryDoc.exists) {
+                            const userData = retryDoc.data();
+                            setHospitalId(userData.hospitalId);
+                            const hospitalNameEl = document.getElementById('hospitalName');
+                            if (hospitalNameEl) hospitalNameEl.textContent = userData.hospitalName || 'My Hospital';
+                        } else {
+                            console.error('❌ User profile not found after retry');
+                        }
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching user profile:', err);
@@ -39,10 +61,6 @@ export function initAuth(onLogin) {
             // Show dashboard, hide login
             document.getElementById('authOverlay').classList.remove('active');
             document.getElementById('app').classList.remove('hidden');
-
-            // Toggle Videos
-            if (loginVideo) loginVideo.classList.remove('active');
-            if (dashVideo) dashVideo.classList.add('active');
 
             // Set user info in sidebar
             const name = user.displayName || user.email.split('@')[0];
@@ -53,10 +71,6 @@ export function initAuth(onLogin) {
             console.log('🚪 User signed out, showing landing page');
             document.getElementById('authOverlay').classList.add('active');
             document.getElementById('app').classList.add('hidden');
-
-            // Toggle Videos
-            if (dashVideo) dashVideo.classList.remove('active');
-            if (loginVideo) loginVideo.classList.add('active');
         }
     });
 
@@ -75,7 +89,7 @@ export function initAuth(onLogin) {
     });
 
     // ── Register Form ──
-    // Creates: Firebase Auth user → Firestore hospital doc → Firestore user doc
+    // Flow: Create Auth user → Create hospital doc → Create user doc → Set pending flag
     document.getElementById('registerForm').addEventListener('submit', async e => {
         e.preventDefault();
         const errEl = document.getElementById('registerError');
@@ -98,23 +112,40 @@ export function initAuth(onLogin) {
 
             // 2. Create hospital document
             const hospitalRef = db.collection('hospitals').doc();
-            await hospitalRef.set({
-                name: hospitalName,
-                createdBy: cred.user.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
 
             // 3. Create user profile with link to hospital
-            await db.collection('users').doc(cred.user.uid).set({
-                displayName: name,
-                email: email,
-                hospitalId: hospitalRef.id,
-                hospitalName: hospitalName,
-                role: 'admin',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            // IMPORTANT: Write both docs BEFORE onAuthStateChanged tries to read them
+            await Promise.all([
+                hospitalRef.set({
+                    name: hospitalName,
+                    createdBy: cred.user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }),
+                db.collection('users').doc(cred.user.uid).set({
+                    displayName: name,
+                    email: email,
+                    hospitalId: hospitalRef.id,
+                    hospitalName: hospitalName,
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                })
+            ]);
+
+            // Set pending data so onAuthStateChanged can use it immediately
+            _pendingRegistration = true;
+            _pendingHospitalId = hospitalRef.id;
+            _pendingHospitalName = hospitalName;
+
+            // Force re-trigger onAuthStateChanged by reloading auth state
+            // Since user is already signed in, we need to manually trigger the dashboard load
+            setHospitalId(hospitalRef.id);
+            const hospitalNameEl = document.getElementById('hospitalName');
+            if (hospitalNameEl) hospitalNameEl.textContent = hospitalName;
 
             console.log('✅ Registered:', name, '→ Hospital:', hospitalName, '(', hospitalRef.id, ')');
+
+            // Reload to ensure a clean state with the hospital context set
+            window.location.reload();
         } catch (err) {
             errEl.textContent = friendlyError(err.code);
         }
