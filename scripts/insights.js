@@ -129,7 +129,7 @@ function buildAnomalyChart(records) {
                 pointBackgroundColor: '#6366f1'
             },
             {
-                label: '⚠️ Anomaly',
+                label: 'Anomaly',
                 data: anomalyData,
                 borderColor: 'transparent',
                 backgroundColor: '#ef4444',
