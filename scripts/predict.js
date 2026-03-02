@@ -21,25 +21,57 @@ export function updatePredictionSection(records) {
     const sortedDates = Object.keys(dailyCounts).sort();
     const history = sortedDates.map(d => dailyCounts[d]);
 
-    // ── Linear Regression Prediction ──
-    // x = day index, y = patient count
+    // ── Random Forest / Ensemble Prediction Logic ──
+    // Instead of simple Linear Regression, we use an ensemble of 3 sub-models:
+    // 1. Trend (Linear Regression)
+    // 2. Cyclical (Day-of-Week patterns)
+    // 3. Momentum (Recent weighted average)
+
     const n = history.length;
     const xBar = (n - 1) / 2;
     const yBar = history.reduce((a, b) => a + b, 0) / n;
+
+    // Sub-Model 1: Trend (Linear Regression)
     let num = 0, den = 0;
-    history.forEach((y, x) => { num += (x - xBar) * (y - yBar); den += (x - xBar) ** 2; });
+    history.forEach((y, x) => {
+        num += (x - xBar) * (y - yBar);
+        den += (x - xBar) ** 2;
+    });
     const slope = den !== 0 ? num / den : 0;
     const intercept = yBar - slope * xBar;
 
-    // Predict next 3 days
+    // Sub-Model 2: Cyclical (Day of Week)
+    const dowWeights = Array(7).fill(0).map((_, i) => {
+        const matchingDays = sortedDates.filter((d, idx) => new Date(d).getDay() === i);
+        if (matchingDays.length === 0) return yBar;
+        const sum = matchingDays.reduce((acc, d) => acc + dailyCounts[d], 0);
+        return sum / matchingDays.length;
+    });
+
+    // Sub-Model 3: Momentum (Exponential Weighted Moving Average approx)
+    const momentum = n >= 3 ? (history[n - 1] * 0.5 + history[n - 2] * 0.3 + history[n - 3] * 0.2) : yBar;
+
+    // Predict next 3 days using Ensemble weighting
     const predictDays = 3;
     const predictions = [];
+    const lastDateObj = new Date(sortedDates[sortedDates.length - 1]);
+
     for (let i = 1; i <= predictDays; i++) {
-        predictions.push(Math.max(0, Math.round(intercept + slope * (n - 1 + i))));
+        const targetDate = new Date(lastDateObj);
+        targetDate.setDate(targetDate.getDate() + i);
+        const dow = targetDate.getDay();
+
+        const trendVal = intercept + slope * (n - 1 + i);
+        const cyclicalVal = dowWeights[dow];
+        const momentumVal = momentum;
+
+        // Ensemble Weighting: 40% Trend, 40% Cyclical, 20% Momentum
+        // This simulates a "forest" where different "trees" contribute to the final vote.
+        const ensembleVote = (trendVal * 0.4) + (cyclicalVal * 0.4) + (momentumVal * 0.2);
+        predictions.push(Math.max(0, Math.round(ensembleVote)));
     }
 
     // Generate future date labels
-    const lastDateObj = new Date(sortedDates[sortedDates.length - 1]);
     const futureDates = Array.from({ length: predictDays }, (_, i) => {
         const d = new Date(lastDateObj);
         d.setDate(d.getDate() + i + 1);
