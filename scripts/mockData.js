@@ -1,5 +1,5 @@
 // mockData.js — Generate 7 days of realistic hospital mock data
-import { db } from './firebase-config.js';
+import { db, getHospitalRef } from './firebase-config.js';
 
 const DEPARTMENTS = ['Emergency', 'Cardiology', 'Neurology', 'Orthopedics'];
 const SEVERITIES = ['low', 'low', 'low', 'medium', 'medium', 'high']; // weighted
@@ -47,7 +47,7 @@ export async function generateMockData() {
                 };
                 if (dischargedAt) record.dischargedAt = dischargedAt;
 
-                const ref = db.collection('hospitalData').doc();
+                const ref = getHospitalRef().doc();
                 batch.set(ref, record);
                 count++;
             }

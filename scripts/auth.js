@@ -1,5 +1,7 @@
-// auth.js – Full authentication with Login + Register
-import { auth } from './firebase-config.js';
+// auth.js – Authentication with Multi-Hospital Support
+// On register: creates a new hospital + links user to it
+// On login: fetches user's hospitalId → sets global context
+import { auth, db, setHospitalId } from './firebase-config.js';
 
 // Switch between Login / Register tabs (called from HTML onclick)
 window.switchTab = function (tab) {
@@ -11,11 +13,30 @@ window.switchTab = function (tab) {
 
 export function initAuth(onLogin) {
     // Firebase auth state listener
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
         const loginVideo = document.getElementById('bgVideoLogin');
         const dashVideo = document.getElementById('bgVideoDashboard');
 
         if (user) {
+            try {
+                // Fetch user profile to get their hospitalId
+                const userDoc = await db.collection('users').doc(user.uid).get();
+
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    setHospitalId(userData.hospitalId);
+
+                    // Update sidebar UI
+                    const hospitalNameEl = document.getElementById('hospitalName');
+                    if (hospitalNameEl) hospitalNameEl.textContent = userData.hospitalName || 'My Hospital';
+                } else {
+                    console.warn('⚠️ User doc not found — this should not happen');
+                }
+            } catch (err) {
+                console.error('Error fetching user profile:', err);
+            }
+
+            // Show dashboard, hide login
             document.getElementById('authOverlay').classList.remove('active');
             document.getElementById('app').classList.remove('hidden');
 
@@ -39,7 +60,7 @@ export function initAuth(onLogin) {
         }
     });
 
-    // Login form submit
+    // ── Login Form ──
     document.getElementById('loginForm').addEventListener('submit', async e => {
         e.preventDefault();
         const errEl = document.getElementById('loginError');
@@ -53,30 +74,59 @@ export function initAuth(onLogin) {
         }
     });
 
-    // Register form submit
+    // ── Register Form ──
+    // Creates: Firebase Auth user → Firestore hospital doc → Firestore user doc
     document.getElementById('registerForm').addEventListener('submit', async e => {
         e.preventDefault();
         const errEl = document.getElementById('registerError');
         errEl.textContent = '';
+
         const name = document.getElementById('regName').value.trim();
+        const hospitalName = document.getElementById('regHospital').value.trim();
         const email = document.getElementById('regEmail').value;
         const pass = document.getElementById('regPassword').value;
+
+        if (!hospitalName) {
+            errEl.textContent = 'Please enter a hospital name.';
+            return;
+        }
+
         try {
+            // 1. Create Firebase Auth user
             const cred = await auth.createUserWithEmailAndPassword(email, pass);
-            // Set display name
             await cred.user.updateProfile({ displayName: name });
+
+            // 2. Create hospital document
+            const hospitalRef = db.collection('hospitals').doc();
+            await hospitalRef.set({
+                name: hospitalName,
+                createdBy: cred.user.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // 3. Create user profile with link to hospital
+            await db.collection('users').doc(cred.user.uid).set({
+                displayName: name,
+                email: email,
+                hospitalId: hospitalRef.id,
+                hospitalName: hospitalName,
+                role: 'admin',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log('✅ Registered:', name, '→ Hospital:', hospitalName, '(', hospitalRef.id, ')');
         } catch (err) {
             errEl.textContent = friendlyError(err.code);
         }
     });
 
-    // Logout
+    // ── Logout ──
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.onclick = () => {
             console.log('🔄 Logout clicked...');
             auth.signOut().then(() => {
-                window.location.reload(); // Force reload to show landing page fresh
+                window.location.reload();
             });
         };
     }

@@ -1,5 +1,5 @@
 // dashboard.js — Real-time Firestore listeners + Chart.js charts + Discharge System
-import { db } from './firebase-config.js';
+import { db, getHospitalRef } from './firebase-config.js';
 import { checkAlerts } from './alerts.js';
 import { updatePredictionSection } from './predict.js';
 import { updateInsights } from './insights.js';
@@ -49,8 +49,8 @@ const CHART_DEFAULTS = () => {
 export function initDashboard() {
     const filterDept = document.getElementById('filterDept');
 
-    // Real-time Firestore listener
-    db.collection('hospitalData').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+    // Real-time Firestore listener — scoped to current hospital
+    getHospitalRef().orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         const records = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         const currentFilter = filterDept ? filterDept.value : 'All';
         render(records, currentFilter);
@@ -218,7 +218,7 @@ function renderActivePatients(activePatients) {
 // Global discharge function (called from inline onclick)
 window.__dischargePatient = async function (docId) {
     try {
-        await db.collection('hospitalData').doc(docId).update({
+        await getHospitalRef().doc(docId).update({
             status: 'discharged',
             dischargedAt: firebase.firestore.FieldValue.serverTimestamp()
         });

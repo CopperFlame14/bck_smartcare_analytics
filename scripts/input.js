@@ -1,5 +1,5 @@
 // input.js — Patient form submission + recent entries list
-import { db } from './firebase-config.js';
+import { db, getHospitalRef } from './firebase-config.js';
 
 const DEPT_EMOJI = { Emergency: '🚨', Cardiology: '❤️', Neurology: '🧠', Orthopedics: '🦴' };
 
@@ -30,7 +30,7 @@ export function initInput() {
         const severity = form.severity.value;
 
         try {
-            await db.collection('hospitalData').add({
+            await getHospitalRef().add({
                 department,
                 arrival,
                 processTime,
@@ -57,8 +57,8 @@ export function initInput() {
         }
     });
 
-    // Real-time recent entries list
-    db.collection('hospitalData').orderBy('createdAt', 'desc').limit(8).onSnapshot(snap => {
+    // Real-time recent entries — scoped to current hospital
+    getHospitalRef().orderBy('createdAt', 'desc').limit(8).onSnapshot(snap => {
         const list = document.getElementById('recentEntries');
         if (!list) return;
         if (snap.empty) {
