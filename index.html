@@ -23,9 +23,11 @@
 <body>
 
     <!-- ===================== AMBIENT BACKGROUND ===================== -->
-    <div class="bg-ambient-wrapper">
-        <video class="bg-video" autoplay muted loop playsinline
-            src="https://cdn.pixabay.com/video/2017/01/01/6973-197914400_large.mp4"></video>
+    <div class="bg-ambient-wrapper" style="z-index: 0;">
+        <video id="bgVideoLogin" class="bg-video active" autoplay muted loop playsinline
+            src="assets/videos/login_bg.mp4"></video>
+        <video id="bgVideoDashboard" class="bg-video" autoplay muted loop playsinline
+            src="assets/videos/dashboard_bg.mp4"></video>
         <div class="bg-overlay-gradient"></div>
         <div class="bg-overlay-radial"></div>
     </div>
@@ -34,8 +36,8 @@
     <div id="authOverlay" class="auth-overlay active">
         <!-- 1. Hero Section -->
         <section class="landing-section hero-section" id="hero">
-            <div class="section-container hero-container">
-                <div class="hero-label">Healthcare Intelligence Platform</div>
+            <div class="section-container hero-content">
+                <div class="badge">Healthcare Intelligence Platform</div>
                 <h1 class="hero-title">SmartCare <span class="text-gradient">AI</span></h1>
                 <p class="hero-subtitle">Next-generation hospital analytics powered by deep learning. Precision insights
                     for the modern healthcare infrastructure.</p>
@@ -199,8 +201,8 @@
                             <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
                             <defs>
                                 <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                    <stop stop-color="#10b981" />
-                                    <stop offset="1" stop-color="#34d399" />
+                                    <stop stop-color="#059669" />
+                                    <stop offset="1" stop-color="#047857" />
                                 </linearGradient>
                             </defs>
                         </svg>
@@ -265,8 +267,8 @@
                         <path d="M16 6L22 12H20V20H22L16 26L10 20H12V12H10L16 6Z" fill="white" opacity="0.9" />
                         <defs>
                             <linearGradient id="grad2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#10b981" />
-                                <stop offset="1" stop-color="#34d399" />
+                                <stop stop-color="#059669" />
+                                <stop offset="1" stop-color="#047857" />
                             </linearGradient>
                         </defs>
                     </svg>
