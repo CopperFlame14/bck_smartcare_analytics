@@ -19,6 +19,8 @@ let _pendingHospitalName = null;
 export function initAuth(onLogin) {
     // Firebase auth state listener
     auth.onAuthStateChanged(async user => {
+        const loginVideo = document.getElementById('bgVideoLogin');
+        const dashVideo = document.getElementById('bgVideoDashboard');
 
         if (user) {
             try {
@@ -62,6 +64,10 @@ export function initAuth(onLogin) {
             document.getElementById('authOverlay').classList.remove('active');
             document.getElementById('app').classList.remove('hidden');
 
+            // Switch to dashboard video
+            if (loginVideo) loginVideo.classList.remove('active');
+            if (dashVideo) dashVideo.classList.add('active');
+
             // Set user info in sidebar
             const name = user.displayName || user.email.split('@')[0];
             document.getElementById('userName').textContent = name;
@@ -71,6 +77,10 @@ export function initAuth(onLogin) {
             console.log('🚪 User signed out, showing landing page');
             document.getElementById('authOverlay').classList.add('active');
             document.getElementById('app').classList.add('hidden');
+
+            // Switch to login video
+            if (dashVideo) dashVideo.classList.remove('active');
+            if (loginVideo) loginVideo.classList.add('active');
         }
     });
 
